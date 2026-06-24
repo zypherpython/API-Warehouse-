@@ -1,12 +1,12 @@
 # Crypto Data Platform
 
-An end-to-end data engineering pipeline that pulls live cryptocurrency data from a public API, orchestrates the workflow with Apache Airflow, stores it in PostgreSQL, and surfaces insights through a Streamlit dashboard.
+An end-to-end data engineering pipeline that pulls live cryptocurrency data from a public API, orchestrates the workflow with Apache Airflow, stores it in PostgreSQL, generates analytics, and uses an LLM to produce plain-English market summaries — all visualized in a Streamlit dashboard.
 
 ---
 
 ## What this project does
 
-Every N minutes, Airflow triggers a DAG that hits a crypto API, cleans the response, and loads it into a PostgreSQL warehouse. A Streamlit app reads from that warehouse and renders live price tracking, historical trends, and comparison charts — no manual steps required once it's running.
+Airflow runs on a schedule, hits a crypto API, cleans the response, and loads it into PostgreSQL. From there, SQL queries compute metrics like daily trends, monthly highs/lows, and price spikes. Those metrics get passed to an LLM which writes a short human-readable summary. A Streamlit app ties it all together.
 
 ---
 
@@ -21,8 +21,12 @@ Apache Airflow          ← schedules, retries, monitors
     ▼
 PostgreSQL              ← stores all historical price data
     │
-    ├──▶ SQL queries     ← ad-hoc analysis
-    └──▶ Streamlit app   ← interactive dashboard
+    ├──▶ Analytics layer     ← SQL: trends, highs/lows, spike detection
+    │         │
+    │         ▼
+    │    AI insight layer    ← LLM summarizes computed metrics
+    │         │
+    └─────────┴──▶ Streamlit dashboard
 ```
 
 ---
@@ -32,11 +36,12 @@ PostgreSQL              ← stores all historical price data
 | Layer | Tool |
 |---|---|
 | Orchestration | Apache Airflow |
-| Data ingestion | Python + Requests |
+| Ingestion | Python + Requests |
 | Transformation | Pandas |
 | Warehouse | PostgreSQL |
+| Analytics | SQL |
+| AI insights | LLM API |
 | Dashboard | Streamlit |
-| Language | Python, SQL |
 
 ---
 
@@ -45,13 +50,50 @@ PostgreSQL              ← stores all historical price data
 ```sql
 CREATE TABLE crypto_prices (
     id          SERIAL PRIMARY KEY,
-    symbol      TEXT,
+    symbol      TEXT NOT NULL,
     price_usd   FLOAT,
     market_cap  FLOAT,
     volume_24h  FLOAT,
-    timestamp   TIMESTAMP
+    timestamp   TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 ```
+
+---
+
+## Analytics
+
+SQL queries run against the warehouse to produce:
+
+- Daily price tracking
+- Monthly high/low calculations
+- Percentage change over time
+- Rule-based spike detection
+
+```python
+# Spike detection logic
+if price_change_1h > 5%:
+    spike_detected = True
+```
+
+---
+
+## AI insight layer
+
+Computed metrics are passed to an LLM which returns a plain-English summary. No predictions, no automated decisions — just readable context on top of the numbers.
+
+Example output:
+> BTC is trading above its 7-day average with elevated volume, suggesting short-term buying pressure.
+
+---
+
+## Dashboard features
+
+- Live prices for BTC, ETH, SOL
+- Historical trend charts
+- Monthly high/low visualization
+- Spike detection highlights
+- AI-generated insight panel
+- Filter by coin and date range
 
 ---
 
@@ -65,44 +107,31 @@ cd crypto-data-platform
 pip install -r requirements.txt
 ```
 
-**Start Airflow**
+Set your API keys and DB connection string in `.env`, then:
+
 ```bash
-airflow standalone
+airflow standalone       # start Airflow
+streamlit run app.py     # start the dashboard
 ```
-
-**Run the dashboard**
-```bash
-streamlit run app.py
-```
-
-Make sure PostgreSQL is running and your connection string is set in `.env` before starting either service.
-
----
-
-## Dashboard features
-
-- Live prices for BTC, ETH, SOL
-- Price trends over time
-- Average price comparison across coins
-- Filter by coin and date range
-- One-click refresh
 
 ---
 
 ## What I built this to learn
 
-- Designing and running ETL pipelines from scratch
+- End-to-end ETL pipeline design
 - Airflow DAG structure — tasks, dependencies, scheduling, retries
-- Warehouse schema design for time-series market data
+- Warehouse schema design for time-series data
+- SQL-based analytics on real market data
+- Using an LLM as an interpretation layer on computed metrics
 - Connecting a live dashboard to a backend database
-- Handling real API responses — rate limits, nulls, type mismatches
 
 ---
 
 ## What's next
 
-- Add Docker so setup is one command
+- Docker so setup is one command
 - Deploy on AWS (EC2 + RDS)
 - Swap batch ingestion for Kafka streaming
 - Add dbt for warehouse transformations
-- Expand beyond crypto to multi-source financial data
+- Alerting via Telegram or email on spike detection
+- Expand to multi-source financial data
