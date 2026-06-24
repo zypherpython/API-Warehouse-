@@ -1,117 +1,108 @@
-🚀 Crypto Data Platform (Airflow + PostgreSQL + Streamlit)
+# Crypto Data Platform
 
-A fully automated end-to-end data engineering pipeline that extracts live cryptocurrency data from an API, processes it using Airflow, stores it in a PostgreSQL data warehouse, and visualizes insights through an interactive Streamlit dashboard.
+An end-to-end data engineering pipeline that pulls live cryptocurrency data from a public API, orchestrates the workflow with Apache Airflow, stores it in PostgreSQL, and surfaces insights through a Streamlit dashboard.
 
-📌 Overview
+---
 
-This project simulates a real-world data engineering system where live market data is:
+## What this project does
 
-Extracted from a public crypto API
-Orchestrated using Apache Airflow
-Stored in a PostgreSQL warehouse
-Visualized using Streamlit dashboards
+Every N minutes, Airflow triggers a DAG that hits a crypto API, cleans the response, and loads it into a PostgreSQL warehouse. A Streamlit app reads from that warehouse and renders live price tracking, historical trends, and comparison charts — no manual steps required once it's running.
 
-It demonstrates the full lifecycle of a modern data pipeline:
-Ingestion → Processing → Storage → Analytics → Visualization
+---
 
-🧠 Architecture
-             ┌──────────────┐
-             │ Crypto API   │
-             └──────┬───────┘
-                    ↓
-             ┌──────────────┐
-             │  Airflow     │
-             │ (Orchestrator│
-             └──────┬───────┘
-                    ↓
-             ┌──────────────┐
-             │ PostgreSQL   │
-             │ Data Warehouse│
-             └──────┬───────┘
-        ┌───────────┴───────────┐
-        ↓                       ↓
-  SQL Analysis           Streamlit Dashboard
-⚙️ Tech Stack
-Python – Data ingestion & processing
-Airflow – Workflow orchestration
-PostgreSQL – Data warehouse
-Requests – API integration
-Pandas – Data transformation
-Streamlit – Interactive dashboard
-SQL – Data analysis
-📊 Features
-🔄 Automated Data Pipeline
-Scheduled data extraction using Airflow DAGs
-Handles continuous ingestion of crypto market data
-🧹 Data Processing
-Cleans and validates raw API responses
-Ensures structured and consistent data storage
-🏦 Data Warehouse
-Stores historical crypto price data
-Enables SQL-based analytics and querying
-📈 Interactive Dashboard
-Live crypto price tracking
-Historical trends visualization
-Easy-to-use UI built with Streamlit
-🪄 Example Dashboard Features
-📉 Price trends over time
-💰 Current crypto prices (BTC, ETH, SOL)
-📊 Average price comparison
-🔍 Filter by cryptocurrency
-🔄 Live refresh capability
-🧱 Database Schema
-crypto_prices (
-    id SERIAL PRIMARY KEY,
-    symbol TEXT,
-    price_usd FLOAT,
-    market_cap FLOAT,
-    volume_24h FLOAT,
-    timestamp TIMESTAMP
-)
-🚀 How It Works
-Airflow triggers a DAG on schedule
-DAG calls the crypto API
-Data is cleaned and validated
-Clean data is inserted into PostgreSQL
-Streamlit reads data from warehouse
-Dashboard visualizes insights
-📦 Installation
+## Architecture
+
+```
+Crypto API
+    │
+    ▼
+Apache Airflow          ← schedules, retries, monitors
+    │
+    ▼
+PostgreSQL              ← stores all historical price data
+    │
+    ├──▶ SQL queries     ← ad-hoc analysis
+    └──▶ Streamlit app   ← interactive dashboard
+```
+
+---
+
+## Tech stack
+
+| Layer | Tool |
+|---|---|
+| Orchestration | Apache Airflow |
+| Data ingestion | Python + Requests |
+| Transformation | Pandas |
+| Warehouse | PostgreSQL |
+| Dashboard | Streamlit |
+| Language | Python, SQL |
+
+---
+
+## Database schema
+
+```sql
+CREATE TABLE crypto_prices (
+    id          SERIAL PRIMARY KEY,
+    symbol      TEXT,
+    price_usd   FLOAT,
+    market_cap  FLOAT,
+    volume_24h  FLOAT,
+    timestamp   TIMESTAMP
+);
+```
+
+---
+
+## Getting started
+
+**Prerequisites:** Python 3.8+, PostgreSQL running locally, Airflow installed
+
+```bash
 git clone https://github.com/your-username/crypto-data-platform.git
 cd crypto-data-platform
 pip install -r requirements.txt
-▶️ Run the Project
-1. Start Airflow
+```
+
+**Start Airflow**
+```bash
 airflow standalone
-2. Run Streamlit Dashboard
+```
+
+**Run the dashboard**
+```bash
 streamlit run app.py
-3. Start PostgreSQL
+```
 
-Make sure your database is running locally.
+Make sure PostgreSQL is running and your connection string is set in `.env` before starting either service.
 
+---
 
-🧠 What I Learned
-Building end-to-end ETL pipelines
-Working with real-time APIs
-Data orchestration using Airflow
-Designing warehouse schemas
-Creating analytics dashboards
-Connecting backend systems to UI
+## Dashboard features
 
-📈 Future Improvements
-Add Kafka for real-time streaming ingestion
-Deploy on AWS (EC2 + RDS + S3)
-Add dbt for transformations
-Add Docker for containerization
-Add authentication to dashboard
-Expand to multi-source financial data
-💡 Why This Project Matters
+- Live prices for BTC, ETH, SOL
+- Price trends over time
+- Average price comparison across coins
+- Filter by coin and date range
+- One-click refresh
 
-This project reflects how modern data systems are built in production environments:
+---
 
-Raw data → Orchestration → Warehouse → Analytics → Dashboard
+## What I built this to learn
 
-It bridges the gap between learning and real-world Data Engineering.
+- Designing and running ETL pipelines from scratch
+- Airflow DAG structure — tasks, dependencies, scheduling, retries
+- Warehouse schema design for time-series market data
+- Connecting a live dashboard to a backend database
+- Handling real API responses — rate limits, nulls, type mismatches
 
-🧑‍💻 Author
+---
 
-Built by a student on a Data Engineering roadmap 🚀
+## What's next
+
+- Add Docker so setup is one command
+- Deploy on AWS (EC2 + RDS)
+- Swap batch ingestion for Kafka streaming
+- Add dbt for warehouse transformations
+- Expand beyond crypto to multi-source financial data
