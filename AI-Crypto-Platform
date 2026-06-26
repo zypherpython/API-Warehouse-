@@ -15,15 +15,39 @@ def fetch_raw_data():
 def clean_data(raw_data):
     cleaned = []
     for coin,value in raw_data.items():
+        
+
+        if (
+            value["usd"] is None or
+            value["usd_market_cap"] is None or
+            value["usd_24h_vol"] is None
+        ):
+            continue
+        coin = coin.title()
+        volume_ratio = value["usd_24h_vol"] / value["usd_market_cap"]
+        
+
+        price = value["usd"]
+
+        if price > 500000:
+            category = "Very high"
+        elif price > 30000:
+            category = "High"
+        elif price > 10000:
+            category="Medium"
+        elif price > 100:
+            category ="low"
+        else:
+            category = "very Low"
+        
+
         cleaned.append({
             "Symbol":coin,
             "Price_usd": value["usd"],
             "Market_Cap": value["usd_market_cap"],
+            "price_category" : category,
+            "volume_ratio": round(volume_ratio,6),
             "24hr_Volume": value["usd_24h_vol"],
             "Time": datetime.now()
         })
-
     return cleaned
-
-
-UNDER CONSTRUCTION...
